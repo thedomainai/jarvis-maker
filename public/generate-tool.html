@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture Generator Tool</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1a1b26;
+      color: #c0caf5;
+    }
+    h1 { color: #7aa2f7; }
+    button {
+      background: #7aa2f7;
+      color: #1a1b26;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 8px;
+      margin: 10px 5px 10px 0;
+    }
+    button:disabled {
+      background: #565f89;
+      cursor: not-allowed;
+    }
+    #log {
+      background: #24283b;
+      padding: 15px;
+      border-radius: 8px;
+      height: 400px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    .success { color: #9ece6a; }
+    .error { color: #f7768e; }
+    .info { color: #7aa2f7; }
+    #progress {
+      margin: 15px 0;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Architecture Generator Tool</h1>
+  <p>30個のアーキテクチャを本番Firestoreに生成します。</p>
+
+  <div>
+    <button id="startBtn" onclick="startGeneration()">Start Generation</button>
+    <button id="stopBtn" onclick="stopGeneration()" disabled>Stop</button>
+  </div>
+
+  <div id="progress">Progress: 0 / 30</div>
+  <div id="log"></div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'
+    import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js'
+    import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai'
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyA3VX1e2EubpoFybLVL6CByRDOkmVX9eKM",
+      authDomain: "jarvis-maker.firebaseapp.com",
+      projectId: "jarvis-maker",
+      storageBucket: "jarvis-maker.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abc123"
+    }
+
+    const app = initializeApp(firebaseConfig)
+    const db = getFirestore(app)
+
+    // Gemini setup
+    const GEMINI_API_KEY = 'AIzaSyA3VX1e2EubpoFybLVL6CByRDOkmVX9eKM'
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
+
+    const THEMES = [
+      '映画制作',
+      '宇宙ロケット開発',
+      '新惑星探査',
+      'レストランチェーン展開',
+      '病院建設',
+      '音楽アルバム収録',
+      'モバイルゲームリリース',
+      'ファッションブランド立ち上げ',
+      '古代遺跡発掘',
+      'テックスタートアップ創業',
+      '24時間ニュースチャンネル運営',
+      '海外ウェディングプランニング',
+      '殺人事件捜査',
+      '新薬開発',
+      'テーマパーク建設',
+      '暗号通貨トークン発行',
+      '地震災害救援活動',
+      '大統領選挙キャンペーン',
+      '小説出版',
+      'オリンピックスタジアム建設',
+      'スマートシティ基盤構築',
+      '美術館建築',
+      'グローバル物流網構築',
+      'アニメシリーズ制作',
+      '自動運転車開発',
+      'SNSプラットフォーム立ち上げ',
+      'ECマーケットプレイス運営',
+      '集団訴訟管理',
+      '私立学校設立',
+      '太陽光発電所建設',
+    ]
+
+    const SYSTEM_PROMPT_EN = `You are "Agent Gene Studio" - an architecture design engine that transforms user goals into executable autonomous agent organization structures.
+
+## Your Task
+Convert the user's abstract goal into a "Directory Structure" of autonomous agents using the "Timeline-Reviewer Protocol".
+
+## Logic Structure (3 Layers)
+
+1. **Layer 1: The Lifecycle**
+   - Decompose the domain into 3-5 phases (directories)
+   - Example: Pre-production → Production → Post-production
+
+2. **Layer 2: The Craft**
+   - Place "Makers" who create deliverables in each phase
+   - Role: Draft creation, code writing, execution
+
+3. **Layer 3: The Critics**
+   - Place "Reviewers" who audit/reject Maker outputs from specific perspectives
+   - Role: Security check, cost monitoring, legal review
+
+4. **The "Whimsy" Injection**
+   - Add ONE "Joker" role that breaks domain conventions
+   - Purpose: Spark innovation, prevent rigidity
+
+## Output Format
+
+Generate a directory structure with PERFECTLY ALIGNED tree lines like this example:
+
+.agents/
+├── 01_survey/
+│   ├── drone-mapper.md        (Predict burial sites from terrain)
+│   ├── permission-negotiator.md (Negotiate excavation permits with local government)
+│   └── cultural-respecter.md  (Research local legends and taboos - Reviewer)
+├── 02_excavation/
+│   ├── layer-digger.md        (Dig without destroying strata)
+│   ├── artifact-handler.md    (Extract artifacts without damage)
+│   └── contamination-preventer.md (Monitor for modern material contamination - Reviewer)
+└── 03_analysis/
+    ├── carbon-dater.md        (Perform carbon dating)
+    ├── theory-builder.md      (Infer historical background)
+    └── skepticism-advocate.md (Keep questioning "Isn't that just a rock?" - Reviewer)
+
+## CRITICAL Rules for tree structure
+- Use "├── " for items with siblings below
+- Use "└── " for the last item in a directory
+- Use "│   " to continue vertical lines (4 chars: │ + 3 spaces)
+- Use "    " (4 spaces) after └── for indentation (no vertical line)
+- NO blank lines between directories
+- Role names should be kebab-case in ENGLISH (e.g., "budget-guillotine")
+- Descriptions in parentheses should be concise in ENGLISH
+- Output ONLY the directory structure, no other text`
+
+    const TRANSLATE_PROMPT = `Translate ONLY the text inside parentheses from English to Japanese.
+
+CRITICAL RULES:
+- Keep the EXACT same directory structure, file names, and tree characters
+- ONLY translate the text inside parentheses (...)
+- Do NOT change anything outside parentheses
+- Do NOT add or remove lines
+- Do NOT change spacing or alignment
+- Output the complete structure with translated comments
+
+Now translate this architecture:`
+
+    let shouldStop = false
+
+    function log(message, type = '') {
+      const logDiv = document.getElementById('log')
+      const span = document.createElement('span')
+      span.className = type
+      span.textContent = message + '\n'
+      logDiv.appendChild(span)
+      logDiv.scrollTop = logDiv.scrollHeight
+    }
+
+    function updateProgress(current, total) {
+      document.getElementById('progress').textContent = `Progress: ${current} / ${total}`
+    }
+
+    async function generateArchitecture(theme) {
+      // Step 1: Generate English version
+      const resultEn = await model.generateContent([
+        { text: SYSTEM_PROMPT_EN },
+        { text: `Goal: ${theme}` },
+      ])
+      const contentEn = resultEn.response.text()
+
+      // Step 2: Translate comments to Japanese
+      const resultJa = await model.generateContent([
+        { text: TRANSLATE_PROMPT },
+        { text: contentEn },
+      ])
+      const contentJa = resultJa.response.text()
+
+      return { contentEn, contentJa }
+    }
+
+    async function saveToFirestore(title, contentEn, contentJa) {
+      const docRef = await addDoc(collection(db, 'architectures'), {
+        title,
+        contentEn,
+        contentJa,
+      })
+      return docRef.id
+    }
+
+    window.startGeneration = async function() {
+      shouldStop = false
+      document.getElementById('startBtn').disabled = true
+      document.getElementById('stopBtn').disabled = false
+      document.getElementById('log').innerHTML = ''
+
+      log('Starting generation of 30 architectures...', 'info')
+      log('')
+
+      for (let i = 0; i < THEMES.length; i++) {
+        if (shouldStop) {
+          log('\nGeneration stopped by user.', 'error')
+          break
+        }
+
+        const theme = THEMES[i]
+        log(`[${i + 1}/${THEMES.length}] Generating: ${theme}`, 'info')
+        updateProgress(i, THEMES.length)
+
+        try {
+          const { contentEn, contentJa } = await generateArchitecture(theme)
+          const id = await saveToFirestore(theme, contentEn, contentJa)
+          log(`  ✓ Saved with ID: ${id}`, 'success')
+
+          // Rate limiting
+          if (i < THEMES.length - 1 && !shouldStop) {
+            await new Promise(resolve => setTimeout(resolve, 2000))
+          }
+        } catch (error) {
+          log(`  ✗ Failed: ${error.message}`, 'error')
+        }
+      }
+
+      updateProgress(shouldStop ? 'Stopped' : THEMES.length, THEMES.length)
+      log('\nDone!', 'success')
+      document.getElementById('startBtn').disabled = false
+      document.getElementById('stopBtn').disabled = true
+    }
+
+    window.stopGeneration = function() {
+      shouldStop = true
+      log('\nStopping...', 'error')
+    }
+  </script>
+</body>
+</html>

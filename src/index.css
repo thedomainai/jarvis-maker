@@ -1,0 +1,266 @@
+@import "tailwindcss";
+
+@theme {
+  /* Refined Iceberg Color Theme */
+  --color-bg-primary: #0f1117;
+  --color-bg-secondary: #161922;
+  --color-bg-tertiary: #1c1f2b;
+  --color-bg-hover: #1f232f;
+  --color-text-primary: #e8e9ed;
+  --color-text-secondary: #6b7089;
+  --color-text-muted: #454962;
+  --color-accent: #7aa2f7;
+  --color-accent-dim: #5d7cbf;
+  --color-border: #232736;
+  --color-border-hover: #3d4258;
+  --color-success: #9ece6a;
+  --color-error: #f7768e;
+
+  /* JetBrains Mono */
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: 'Roboto', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+/* Particle grain texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+}
+
+/* Ambient glow accents */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 600px 400px at 15% 25%, rgba(122, 162, 247, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 350px at 85% 15%, rgba(96, 223, 255, 0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 450px 300px at 75% 85%, rgba(122, 162, 247, 0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 250px at 10% 80%, rgba(96, 223, 255, 0.04) 0%, transparent 70%);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Minimal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-hover);
+}
+
+/* Selection */
+::selection {
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+}
+
+/* Neon Electric Effect */
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 5px var(--color-accent),
+      0 0 10px var(--color-accent),
+      0 0 20px var(--color-accent),
+      0 0 40px var(--color-accent);
+  }
+  50% {
+    box-shadow:
+      0 0 10px var(--color-accent),
+      0 0 20px var(--color-accent),
+      0 0 40px var(--color-accent),
+      0 0 80px var(--color-accent);
+  }
+}
+
+@keyframes electric-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes electric-flash {
+  0%, 90%, 100% {
+    opacity: 0;
+  }
+  92%, 94%, 96%, 98% {
+    opacity: 1;
+  }
+  91%, 93%, 95%, 97%, 99% {
+    opacity: 0.3;
+  }
+}
+
+/* Neon border trace animation - runs once on hover */
+@keyframes border-trace {
+  0% {
+    --angle: 0deg;
+  }
+  100% {
+    --angle: 360deg;
+  }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.neon-interactive {
+  position: relative;
+  transition: all 0.2s ease;
+  isolation: isolate;
+  background: transparent !important;
+}
+
+.neon-interactive::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--angle),
+    #5b7ee5 0deg,
+    #7aa2f7 45deg,
+    #60dfff 90deg,
+    #b4f0ff 135deg,
+    #60dfff 180deg,
+    #7aa2f7 225deg,
+    #5b7ee5 270deg,
+    #4a6cd4 315deg,
+    #5b7ee5 360deg
+  );
+  opacity: 0;
+  --angle: 0deg;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.neon-interactive::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(22, 25, 34, 0.98);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Ensure card content is above the background overlay */
+.neon-interactive > * {
+  position: relative;
+  z-index: 3;
+}
+
+.neon-interactive:hover::before {
+  opacity: 1;
+  animation: border-trace 1.2s ease-in-out forwards;
+}
+
+.neon-interactive:hover {
+  box-shadow:
+    0 0 20px rgba(122, 162, 247, 0.15),
+    0 0 40px rgba(122, 162, 247, 0.05);
+}
+
+.neon-interactive:active {
+  box-shadow:
+    0 0 10px rgba(122, 162, 247, 0.5),
+    0 0 20px rgba(122, 162, 247, 0.3),
+    inset 0 0 10px rgba(122, 162, 247, 0.1);
+}
+
+/* Button specific neon effect */
+.neon-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.neon-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(122, 162, 247, 0.4),
+    transparent
+  );
+  transform: translateX(-100%);
+  transition: none;
+}
+
+.neon-button:active::after {
+  animation: electric-sweep 0.3s ease-out;
+}
+
+@keyframes electric-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.neon-button:active {
+  box-shadow:
+    0 0 10px rgba(122, 162, 247, 0.6),
+    0 0 20px rgba(122, 162, 247, 0.4);
+  border-color: var(--color-accent) !important;
+}
+
+/* Input neon focus effect */
+.neon-input {
+  transition: all 0.2s ease;
+}
+
+.neon-input:focus {
+  box-shadow:
+    0 0 10px rgba(122, 162, 247, 0.3),
+    0 0 20px rgba(122, 162, 247, 0.1);
+}
